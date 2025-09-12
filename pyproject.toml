@@ -1,0 +1,21 @@
+[project]
+name = "pdf2sqlite"
+version = "0.0.0"
+description = "Builds a searchable sqlite knowledge base out of pdf data"
+dependencies = [
+    "boto3",
+    "pypdf == 6.0.0",
+    "litellm",
+    "gmft",
+    "sqlite-vec",
+    "scikit-learn",
+    "numpy"
+]
+requires-python = ">=3.12"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.scripts]
+pdf2sqlite = "pdf2sqlite.pdf2sqlite:main"
