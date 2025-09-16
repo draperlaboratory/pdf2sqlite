@@ -60,6 +60,8 @@ def init_db(cursor):
     cursor.execute("""
            CREATE TABLE pdf_figures(
             id INTEGER PRIMARY KEY,
+            mime_type STRING NOT NULL, --the mime type of the image
+            description STRING, --a description of the image contents
             data BLOB --this is binary data for an image of the figure
             )""")
     cursor.execute("""

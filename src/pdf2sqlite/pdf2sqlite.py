@@ -102,7 +102,7 @@ def insert_pdf(args, the_pdf, cursor, db):
                     [pdf_id, page_id])
 
             for count, fig in enumerate(page.images):
-                cursor.execute("INSERT INTO pdf_figures (data) VALUES (?)", [fig.data])
+                cursor.execute("INSERT INTO pdf_figures (data, mime_type) VALUES (?,?)", [fig.data, fig.image.format])
                 figure_id = cursor.lastrowid
                 cursor.execute("INSERT INTO page_to_figure (page_id, figure_id) VALUES (?,?)",
                                [page_id, figure_id])
