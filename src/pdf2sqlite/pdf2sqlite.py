@@ -5,8 +5,9 @@ import sys
 import sqlite3
 from PIL import Image
 from pypdf import PdfReader, PdfWriter
-from rich.live import Live
 from rich.markdown import Markdown
+from rich.live import Live
+from rich.tree import Tree
 import argparse
 from .summarize import summarize
 from .abstract import abstract
@@ -15,6 +16,13 @@ from .init_db import init_db
 from .pdf_to_table import get_rich_tables
 from .embeddings import process_pdf_for_semantic_search
 from .describe_figure import describe
+
+def set_view(page_nu, title, tasks = []):
+    tree = Tree(Markdown(f"**processing page {page_nu} of {title}**"))
+    for task in tasks:
+        tree.add(task)
+    return tree
+
 
 def generate_description(title, args, reader):
     new_pdf = PdfWriter(None)
@@ -53,9 +61,12 @@ def insert_sections(sections, pdf_id, cursor):
                     cursor.execute("INSERT INTO pdf_to_section (pdf_id, section_id) VALUES (?,?)",
                            [pdf_id, section_id])
 
-def insert_page(page, rich_tables, live, pdf_id, cursor, args, gists, the_pdf):
+def insert_page(page, rich_tables, live, pdf_id, cursor, args, gists, title):
+
 
     page_number = page.page_number + 1 #pages are zero indexed. We do this to match the probable ToC one-indexing of pages.
+    live.update(set_view(page_number, title, ["extracting page"]))
+
     cursor.execute("SELECT id, gist FROM pdf_pages WHERE pdf_id = ? AND page_number = ?", [pdf_id, page.page_number + 1])
     row = cursor.fetchone()
     page_id = None
@@ -66,7 +77,7 @@ def insert_page(page, rich_tables, live, pdf_id, cursor, args, gists, the_pdf):
     pdf_bytes = pdf_bytes.getvalue()
 
     if row is None:
-        live.update(Markdown(f"creating page {page_number}"))
+        live.update(set_view(page_number, title, ["extracting page", "extracting text"]))
         cursor.execute(
                 "INSERT INTO pdf_pages (page_number, data, text, pdf_id) VALUES (?,?,?,?)",
                 [page_number, pdf_bytes, page.extract_text(), pdf_id])
@@ -75,7 +86,11 @@ def insert_page(page, rich_tables, live, pdf_id, cursor, args, gists, the_pdf):
                 "INSERT INTO pdf_to_page (pdf_id, page_id) VALUES (?,?)", 
                 [pdf_id, page_id])
 
-        for fig in page.images:
+        live.update(set_view(page_number, title, ["extracting page", "extracting figures"]))
+        total = len(page.images)
+        for index, fig in enumerate(page.images):
+            live.update(set_view(page_number, title, 
+                ["extracting page", "extracting figures", f"extracting figure {index+1}/{total}"]))
             mime_type = Image.MIME.get(fig.image.format.upper())
             description = None
             cursor.execute("INSERT INTO pdf_figures (data, description, mime_type) VALUES (?,?,?)", 
@@ -95,34 +110,45 @@ def insert_page(page, rich_tables, live, pdf_id, cursor, args, gists, the_pdf):
                 pdf_pages.id = ?
 
         ''', [page_id])
-        for fig in cursor.fetchall():
+        figures = cursor.fetchall()
+        total = len(figures)
+        for index, fig in enumerate(figures):
+            live.update(set_view(page_number, title, 
+                 ["extracting page", "describing figures", f"describing figure {index+1}/{total}"]))
+
             if fig[0] is None:
                 description = describe(fig[2], fig[3], args.vision_model)
                 cursor.execute("UPDATE pdf_figures SET description = ? WHERE id = ?",
                                [description, fig[1]])
+                live.update(set_view(page_number, title, 
+                     ["extracting page", "describing figures", f"describing figure {index+1}/{total}:\n\n", Markdown(description)]))
 
     if (row is None or row[1] is None) and args.summarizer:
         gist = summarize(gists,
                          description,
                          page_number,
-                         the_pdf,
+                         title,
                          pdf_bytes, 
                          args.summarizer)
         gists.append(gist)
         if (len(gists) > 5):
             gists.pop(0)
         cursor.execute("UPDATE pdf_pages SET gist = ? WHERE id = ?", [gist, page_id])
-        print(f"adding gist of page {page_number}: {gist}")
+        live.update(set_view(page_number, title, 
+             ["extracting page", "adding page summaries", f"inserting gist: {gist}"]))
 
     if args.tables:
-        for table in rich_tables:
+        live.update(set_view(page_number, title, 
+             ["extracting page", "inserting tables"]))
+        total = len(rich_tables)
+        for index, table in enumerate(rich_tables):
             if table.page.page_number + 1 == page_number:
-                print(f"inserting tables from page {page_number}")
                 buffered = io.BytesIO()
                 table.image().save(buffered, format="JPEG")
                 image_b64 = base64.b64encode(buffered.getvalue())
                 try:
-                    print("inserted")
+                    live.update(set_view(page_number, title, 
+                         ["extracting page", "inserting tables", f"inserting table: {index+1}/{total}"]))
                     text = table.df().to_markdown()
                     cursor.execute(
                             "INSERT INTO pdf_tables (text, image, caption_above, caption_below, pdf_id, page_number, xmin, ymin) VALUES (?,?,?,?,?,?,?,?)",
@@ -132,7 +158,7 @@ def insert_page(page, rich_tables, live, pdf_id, cursor, args, gists, the_pdf):
                             "INSERT INTO page_to_table (page_id, table_id) VALUES (?,?)",
                             [page_id, table_id])
                 except:
-                        print("extract failed")
+                        live.console.print(f"[red]extract table on p{page_number} failed")
                         text = None
 
 def insert_pdf(args, the_pdf, live, cursor, db):
@@ -166,7 +192,7 @@ def insert_pdf(args, the_pdf, live, cursor, db):
     rich_tables = get_rich_tables(the_pdf) if args.tables else None
 
     for index, page in enumerate(reader.pages):
-        insert_page(page, rich_tables, live, pdf_id, cursor, args, gists, the_pdf)
+        insert_page(page, rich_tables, live, pdf_id, cursor, args, gists, title)
         db.commit()
 
 def validate_pdf(the_pdf):
@@ -205,7 +231,7 @@ def main():
             if header != b'SQLite':
                 sys.exit("Aborting. The input file isn't a valid SQLite database!")
 
-    view = Markdown("")
+    view = Tree("")
 
     with Live(view, refresh_per_second=4) as live:
         update_db(args,live)
@@ -220,7 +246,7 @@ def update_db(args, live):
     rows = cursor.fetchall()
     if len(rows) < 1:
         # if not, create it.
-        print("Initializing new database")
+        live.console.print("[blue]Initializing new database")
         init_db(cursor)
 
     for pdf in args.pdfs:
