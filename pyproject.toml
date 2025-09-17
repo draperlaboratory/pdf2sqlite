@@ -9,7 +9,8 @@ dependencies = [
     "gmft",
     "sqlite-vec",
     "scikit-learn",
-    "numpy"
+    "numpy",
+    "rich"
 ]
 requires-python = ">=3.12"
 

@@ -1,9 +1,9 @@
-from gmft.auto import CroppedTable, TableDetector, AutoTableDetector
+from gmft.auto import AutoTableDetector
+from gmft.formatters.base import FormattedTable
 from gmft.formatters.tatr import TATRFormatConfig, TATRTableFormatter
 from gmft.pdf_bindings import PyPDFium2Document
-from gmft._rich_text.rich_page import embed_tables
 
-def get_rich_tables(pdf_path):
+def get_rich_tables(pdf_path : str) -> list[FormattedTable]:
 
     detector = AutoTableDetector()
     config = TATRFormatConfig(large_table_threshold=0, no_timm=True)
