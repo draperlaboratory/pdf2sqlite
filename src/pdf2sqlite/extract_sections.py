@@ -1,5 +1,4 @@
-import os
-from pypdf import PdfReader, PdfWriter
+from pypdf import PdfReader
 from typing import Dict
 
 def extract_toc_and_sections(reader: PdfReader) -> Dict:
