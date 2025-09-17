@@ -5,7 +5,6 @@ import sys
 import sqlite3
 from PIL import Image
 from pypdf import PdfReader, PdfWriter
-from rich.markdown import Markdown
 from rich.live import Live
 from rich.tree import Tree
 import argparse
@@ -16,13 +15,7 @@ from .init_db import init_db
 from .pdf_to_table import get_rich_tables
 from .embeddings import process_pdf_for_semantic_search
 from .describe_figure import describe
-
-def set_view(page_nu, title, tasks = []):
-    tree = Tree(Markdown(f"**processing page {page_nu} of {title}**"))
-    for task in tasks:
-        tree.add(task)
-    return tree
-
+from .view import set_view
 
 def generate_description(title, args, reader):
     new_pdf = PdfWriter(None)
@@ -113,15 +106,11 @@ def insert_page(page, rich_tables, live, pdf_id, cursor, args, gists, title):
         figures = cursor.fetchall()
         total = len(figures)
         for index, fig in enumerate(figures):
-            live.update(set_view(page_number, title, 
-                 ["extracting page", "describing figures", f"describing figure {index+1}/{total}"]))
-
+            tasks = ["extracting page", "describing figures", f"describing figure {index+1}/{total}"]
             if fig[0] is None:
-                description = describe(fig[2], fig[3], args.vision_model)
+                description = describe(fig[2], fig[3], args.vision_model, live, page_number, title, tasks)
                 cursor.execute("UPDATE pdf_figures SET description = ? WHERE id = ?",
                                [description, fig[1]])
-                live.update(set_view(page_number, title, 
-                     ["extracting page", "describing figures", f"describing figure {index+1}/{total}:\n\n", Markdown(description)]))
 
     if (row is None or row[1] is None) and args.summarizer:
         gist = summarize(gists,

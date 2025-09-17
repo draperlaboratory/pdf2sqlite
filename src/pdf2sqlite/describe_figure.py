@@ -1,6 +1,9 @@
 import base64
 import litellm
 import sys
+from .view import set_view
+from rich.markdown import Markdown
+from rich.panel import Panel
 
 def system_prompt():
     return """
@@ -21,7 +24,7 @@ Be factual and specific. Do not ask follow up questions, only generate the descr
 
 """
 
-def describe(image_bytes, mimetype, model):
+def describe(image_bytes, mimetype, model, live, page_number, title, tasks):
     # previous gists could supply additional context, but let's try it
     # context-free to start
 
@@ -31,6 +34,7 @@ def describe(image_bytes, mimetype, model):
     base64_string = base64.b64encode(image_bytes).decode("utf-8")
 
     response = litellm.completion(
+            stream = True,
             model = model,
             messages = [ { 
                "role" : "system",
@@ -51,5 +55,10 @@ def describe(image_bytes, mimetype, model):
                 ],
             }])
 
-    return response.choices[0].message.content
+    description = ""
+    for chunk in response:
+        description = description + (chunk.choices[0].delta.content or "")
+        live.update(set_view(page_number, title, tasks + [Panel(Markdown(description))]))
+
+    return description
 

@@ -116,6 +116,6 @@ def extract_toc_and_sections(reader: PdfReader) -> Dict:
                     }
 
     except Exception as e:
-        print(f"Error extracting TOC from {pdf_path}: {e}")
+        print(f"Error extracting TOC: {e}")
 
     return result
