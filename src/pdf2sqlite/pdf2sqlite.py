@@ -103,17 +103,31 @@ def insert_pdf(args, the_pdf, cursor, db):
                     "INSERT INTO pdf_to_page (pdf_id, page_id) VALUES (?,?)", 
                     [pdf_id, page_id])
 
-            for count, fig in enumerate(page.images):
+            for fig in page.images:
                 mime_type = Image.MIME.get(fig.image.format.upper())
                 description = None
-                if args.vision_model:
-                    description = describe(fig.data, mime_type, args.vision_model)
-                cursor.execute("INSERT INTO pdf_figures (data, description, mime_type) VALUES (?,?,?)", [fig.data, description, mime_type])
+                cursor.execute("INSERT INTO pdf_figures (data, description, mime_type) VALUES (?,?,?)", 
+                               [fig.data, description, mime_type])
                 figure_id = cursor.lastrowid
                 cursor.execute("INSERT INTO page_to_figure (page_id, figure_id) VALUES (?,?)",
                                [page_id, figure_id])
         else:
             page_id = row[0]
+
+        if args.vision_model:
+            cursor.execute('''
+                SELECT pdf_figures.description, pdf_figures.id, pdf_figures.data, pdf_figures.mime_type FROM 
+                    pdf_figures JOIN page_to_figure ON pdf_figures.id = page_to_figure.figure_id
+                                JOIN pdf_pages ON page_to_figure.page_id = pdf_pages.id
+                WHERE
+                    pdf_pages.id = ?
+
+            ''', [page_id])
+            for fig in cursor.fetchall():
+                if fig[0] is None:
+                    description = describe(fig[2], fig[3], args.vision_model)
+                    cursor.execute("UPDATE pdf_figures SET description = ? WHERE id = ?",
+                                   [description, fig[1]])
 
         if (row is None or row[1] is None) and args.summarizer:
             gist = summarize(gists,
