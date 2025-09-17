@@ -94,7 +94,7 @@ def insert_pdf(args, the_pdf, cursor, db):
         new_pdf.write(pdf_bytes)
         pdf_bytes = pdf_bytes.getvalue()
         if row is None:
-            print(f"creating page {index}")
+            print(f"creating page {index + 1}")
             cursor.execute(
                     "INSERT INTO pdf_pages (page_number, data, text, pdf_id) VALUES (?,?,?,?)",
                     [page_number, pdf_bytes, page.extract_text(), pdf_id])
