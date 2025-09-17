@@ -3,6 +3,7 @@ import io
 import base64
 import sys
 import sqlite3
+from PIL import Image
 from pypdf import PdfReader, PdfWriter
 import argparse
 from .summarize import summarize
@@ -11,6 +12,7 @@ from .extract_sections import extract_toc_and_sections
 from .init_db import init_db
 from .pdf_to_table import get_rich_tables
 from .embeddings import process_pdf_for_semantic_search
+from .describe_figure import describe
 
 def generate_description(title, args, reader):
     if args.abstracter:
@@ -102,7 +104,11 @@ def insert_pdf(args, the_pdf, cursor, db):
                     [pdf_id, page_id])
 
             for count, fig in enumerate(page.images):
-                cursor.execute("INSERT INTO pdf_figures (data, mime_type) VALUES (?,?)", [fig.data, fig.image.format])
+                mime_type = Image.MIME.get(fig.image.format.upper())
+                description = None
+                if args.vision_model:
+                    description = describe(fig.data, mime_type, args.vision_model)
+                cursor.execute("INSERT INTO pdf_figures (data, description, mime_type) VALUES (?,?,?)", [fig.data, description, mime_type])
                 figure_id = cursor.lastrowid
                 cursor.execute("INSERT INTO page_to_figure (page_id, figure_id) VALUES (?,?)",
                                [page_id, figure_id])
@@ -160,6 +166,7 @@ def main():
     parser.add_argument("-s", "--summarizer", help = "an LLM to sumarize pdf pages (litellm naming conventions)")
     parser.add_argument("-a", "--abstracter", help = "an LLM to produce an abstract (litellm naming conventions)")
     parser.add_argument("-e", "--embedder", help = "an embedding model to generate vector embeddings (litellm naming conventions)")
+    parser.add_argument("-v", "--vision_model", help = "a vision model to describe images (litellm naming conventions)")
     parser.add_argument("-t", "--tables", action = "store_true", help = "use gmft to analyze tables")
     parser.add_argument("-o", "--offline", action = "store_true", help = "offline mode for gmft (blocks hugging face telemetry, solves VPN issues)")
 
