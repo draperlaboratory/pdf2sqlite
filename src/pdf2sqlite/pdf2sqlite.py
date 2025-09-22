@@ -3,11 +3,13 @@ import io
 import base64
 import sys
 import sqlite3
+from sqlite3 import Connection, Cursor
 from PIL import Image
 from pypdf import PdfReader, PdfWriter
 from rich.live import Live
 from rich.tree import Tree
 import argparse
+from argparse import Namespace
 from .summarize import summarize
 from .abstract import abstract
 from .extract_sections import extract_toc_and_sections
@@ -17,7 +19,7 @@ from .embeddings import process_pdf_for_semantic_search
 from .describe_figure import describe
 from .view import set_view
 
-def generate_description(title, args, reader):
+def generate_description(title : str, args : Namespace, reader : PdfReader):
     new_pdf = PdfWriter(None)
     pages = reader.pages[:10]
     for i, page in enumerate(pages):
@@ -29,9 +31,9 @@ def generate_description(title, args, reader):
     print(f"generated description of PDF: \"{description}\"")
     return description
 
-def insert_pdf_by_name(title, description, cursor):
+def insert_pdf_by_name(title : str, description : str | None, cursor : Cursor):
     cursor.execute("SELECT id FROM pdfs WHERE title = ?", [title])
-    row = cursor.fetchone()
+    row : list[int] | None = cursor.fetchone()
 
     if row is None:
         cursor.execute("INSERT INTO pdfs (title, description) VALUES (?,?)", 
@@ -40,7 +42,7 @@ def insert_pdf_by_name(title, description, cursor):
     else:
         return row[0]
 
-def insert_sections(sections, pdf_id, cursor):
+def insert_sections(sections, pdf_id, cursor : Cursor):
         for section_key, section in sections.items():
             if section["title"] and section["start_page"]:
                 title = section["title"]
@@ -150,11 +152,11 @@ def insert_page(page, rich_tables, live, pdf_id, cursor, args, gists, title):
                         live.console.print(f"[red]extract table on p{page_number} failed")
                         text = None
 
-def insert_pdf(args, the_pdf, live, cursor, db):
+def insert_pdf(args : Namespace, the_pdf : str , live : Live, cursor : Cursor, db : Connection):
 
     reader = PdfReader(the_pdf)
 
-    title = reader.metadata.title or os.path.basename(the_pdf)
+    title = reader.metadata.title if reader.metadata and reader.metadata.title else os.path.basename(the_pdf)
 
     gists = [] # these are the page by page gists. We keep them around so that they can provide context for later gists
 
@@ -223,16 +225,18 @@ def main():
     view = Tree("")
 
     with Live(view, refresh_per_second=4) as live:
-        update_db(args,live)
+        update_db(args, live)
 
-def update_db(args, live):
+def update_db(args : Namespace, live : Live):
 
     db = sqlite3.connect(args.database)
 
     # check if pdf_pages table exists
     cursor = db.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='pdf_pages'");
+
     rows = cursor.fetchall()
+
     if len(rows) < 1:
         # if not, create it.
         live.console.print("[blue]Initializing new database")
