@@ -14,7 +14,8 @@ extract a "gist" of each page (using any model supported by litellm) and an
 and tabular data extracted using [gmft](https://github.com/conjuncts/gmft).
 
 ```
-usage: pdf2sqlite [-h] -p PDFS [PDFS ...] -d DATABASE [-s SUMMARIZER] [-a ABSTRACTER] [-t] [-o]
+usage: pdf2sqlite [-h] -p PDFS [PDFS ...] -d DATABASE [-s SUMMARIZER] [-a 
+ABSTRACTER] [-e EMBEDDER] [-v VISION_MODEL] [-t] [-o]
 
 covert pdfs into an easy-to-query sqlite DB
 
@@ -28,6 +29,10 @@ options:
                         an LLM to sumarize pdf pages (litellm naming conventions)
   -a ABSTRACTER, --abstracter ABSTRACTER
                         an LLM to produce an abstract (litellm naming conventions)
+  -e EMBEDDER, --embedder EMBEDDER
+                        an embedding model to generate vector embeddings (litellm naming conventions)
+  -v VISION_MODEL, --vision_model VISION_MODEL
+                        a vision model to describe images (litellm naming conventions)
   -t, --tables          use gmft to analyze tables
   -o, --offline         offline mode for gmft (blocks hugging face telemetry, solves VPN issues)
 ```
