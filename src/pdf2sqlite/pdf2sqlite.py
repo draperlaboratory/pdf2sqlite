@@ -43,7 +43,7 @@ def insert_pdf_by_name(title : str, description : str | None, cursor : Cursor):
         return row[0]
 
 def insert_sections(sections, pdf_id, cursor : Cursor):
-        for section_key, section in sections.items():
+        for _, section in sections.items():
             if section["title"] and section["start_page"]:
                 title = section["title"]
                 start_page = section["start_page"]

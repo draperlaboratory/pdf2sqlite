@@ -1,4 +1,5 @@
 from pypdf import PdfReader
+from pypdf.generic._data_structures import Destination
 from typing import Dict
 
 def extract_toc_and_sections(reader: PdfReader) -> Dict:
@@ -38,7 +39,7 @@ def extract_toc_and_sections(reader: PdfReader) -> Dict:
                         flat.append(entry)
                 return flat
 
-            flat_entries = process_outline(outline)
+            flat_entries : list[Destination] = process_outline(outline)
 
             if flat_entries:
                 result['has_toc'] = True
@@ -47,22 +48,15 @@ def extract_toc_and_sections(reader: PdfReader) -> Dict:
                 # Extract text from each TOC section
                 for i, entry in enumerate(flat_entries):
                     if hasattr(entry, 'title') and hasattr(entry, 'page'):
-                        title = entry.title
+                        title = entry.title or f'section {i}'
                         level = getattr(entry, 'level', 1)
 
                         # Get page number
-                        try:
-                            page_number = reader.get_destination_page_number(entry)
-                        except:
-                            # Fallback if get_destination_page_number fails
-                            page_obj = entry.page
-                            if hasattr(page_obj, 'object_id'):
-                                for i, page in enumerate(reader.pages):
-                                    if page.object_id == page_obj.object_id:
-                                        page_number = i
-                                        break
-                            else:
-                                page_number = 0
+                        page_number = reader.get_destination_page_number(entry)
+
+                        if page_number is None:
+                            #skip section if we can't find page numbers
+                            continue
 
                         # Determine section end page
                         next_page = None
