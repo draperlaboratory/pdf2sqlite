@@ -28,7 +28,7 @@ def describe(image_bytes, mimetype, model, live, page_number, title, tasks):
     # previous gists could supply additional context, but let's try it
     # context-free to start
 
-    if not litellm.supports_vision(model):
+    if not litellm.utils.supports_vision(model=model):
         sys.exit(f"Aborting. The model supplied, `{model}` doesn't support image inputs!")
 
     base64_string = base64.b64encode(image_bytes).decode("utf-8")

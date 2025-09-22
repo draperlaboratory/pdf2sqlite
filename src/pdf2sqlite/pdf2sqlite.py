@@ -33,7 +33,7 @@ def generate_description(title : str, args : Namespace, reader : PdfReader):
 
 def insert_pdf_by_name(title : str, description : str | None, cursor : Cursor):
     cursor.execute("SELECT id FROM pdfs WHERE title = ?", [title])
-    row : list[int] | None = cursor.fetchone()
+    row : tuple[int] | None = cursor.fetchone()
 
     if row is None:
         cursor.execute("INSERT INTO pdfs (title, description) VALUES (?,?)", 
@@ -42,7 +42,7 @@ def insert_pdf_by_name(title : str, description : str | None, cursor : Cursor):
     else:
         return row[0]
 
-def insert_sections(sections, pdf_id, cursor : Cursor):
+def insert_sections(sections, pdf_id : int, cursor : Cursor):
         for _, section in sections.items():
             if section["title"] and section["start_page"]:
                 title = section["title"]
