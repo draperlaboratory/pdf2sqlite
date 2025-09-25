@@ -43,8 +43,9 @@ CREATE TABLE pdf_sections(
 
 CREATE TABLE pdf_tables(
     id INTEGER PRIMARY KEY,
-    text STRING,
+    text STRING, --extracted markdown text
     image BLOB, --This is binary data for an image of the table
+    description STRING, --a description of the table contents
     caption_above STRING,
     caption_below STRING,
     pdf_id INTEGER NOT NULL,

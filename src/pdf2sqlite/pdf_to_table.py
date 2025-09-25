@@ -1,7 +1,7 @@
 from gmft.auto import AutoTableDetector
 from gmft.formatters.base import FormattedTable
 from gmft.formatters.tatr import TATRFormatConfig, TATRTableFormatter
-from gmft.pdf_bindings import PyPDFium2Document
+from gmft.pdf_bindings.pdfium import PyPDFium2Document
 
 def get_rich_tables(pdf_path : str) -> list[FormattedTable]:
 
