@@ -1,8 +1,12 @@
+import os
 from rich.markdown import Markdown
 from rich.tree import Tree
 
-def set_view(page_nu, title, tasks = []):
-    tree = Tree(Markdown(f"**processing page {page_nu} of {title}**"))
+def task_view(title, tasks = []):
+    tree = Tree(Markdown(f"{"󰗚" if os.environ["NERD_FONT"] else ""} **Processing {title}**"))
     for task in tasks:
         tree.add(task)
     return tree
+
+def fresh_view():
+    return Tree("")

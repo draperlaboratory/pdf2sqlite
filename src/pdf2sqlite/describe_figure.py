@@ -1,7 +1,7 @@
 import base64
 import litellm
 import sys
-from .view import set_view
+from .view import task_view
 from rich.markdown import Markdown
 from rich.panel import Panel
 
@@ -58,7 +58,7 @@ def describe(image_bytes, mimetype, model, live, page_number, title, tasks):
     description = ""
     for chunk in response:
         description = description + (chunk.choices[0].delta.content or "")
-        live.update(set_view(page_number, title, tasks + [Panel(Markdown(description))]))
+        live.update(task_view(page_number, title, tasks + [Panel(Markdown(description))]))
 
     return description
 

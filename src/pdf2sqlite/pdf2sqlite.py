@@ -7,8 +7,6 @@ from sqlite3 import Connection, Cursor
 from PIL import Image
 from pypdf import PdfReader, PdfWriter, PageObject
 from rich.live import Live
-from rich.tree import Tree
-from rich.markdown import Markdown
 import argparse
 from gmft.formatters.base import FormattedTable
 from argparse import Namespace
@@ -19,7 +17,7 @@ from .init_db import init_db
 from .pdf_to_table import get_rich_tables
 from .embeddings import process_pdf_for_semantic_search
 from .describe_figure import describe
-from .view import set_view
+from .view import task_view, fresh_view
 
 def generate_description(title : str, args : Namespace, reader : PdfReader):
     new_pdf = PdfWriter(None)
@@ -63,7 +61,7 @@ def insert_sections(sections, pdf_id : int, cursor : Cursor):
 def extract_figures(cursor: Cursor, live : Live, page_number : int, title : str, page, page_id: int, args : Namespace, fresh_page : bool):
 
     if fresh_page:
-        live.update(set_view(page_number, title, ["extracting page", "extracting figures"]))
+        live.update(task_view(title, [f"extracting page {page_number}", "extracting figures"]))
         total = len(page.images)
         for index, fig in enumerate(page.images):
             # we skip small image smaller than a certain bound, which are often
@@ -72,7 +70,7 @@ def extract_figures(cursor: Cursor, live : Live, page_number : int, title : str,
                 continue
             mime_type = Image.MIME.get(fig.image.format.upper())
             try:
-                live.update(set_view(page_number, title, 
+                live.update(task_view(title, 
                     ["extracting page", "extracting figures", f"extracting figure {index+1}/{total}"]))
                 cursor.execute("INSERT INTO pdf_figures (data, description, mime_type) VALUES (?,?,?)", 
                                [fig.data, None, mime_type])
@@ -81,7 +79,7 @@ def extract_figures(cursor: Cursor, live : Live, page_number : int, title : str,
                                [page_id, figure_id])
 
             except Exception as e:
-                    live.console.print(f"[red]extract {mime_type} on p{page_number} failed: {e}")
+                live.console.print(f"[red]extract {mime_type} on p{page_number} failed: {e}")
 
     if args.vision_model:
         cursor.execute('''
@@ -96,7 +94,7 @@ def extract_figures(cursor: Cursor, live : Live, page_number : int, title : str,
         total = len(figures)
         for index, fig in enumerate(figures):
             try:
-                tasks = ["extracting page", "describing figures", f"describing figure {index+1}/{total}"]
+                tasks = [f"extracting page {page_number}", f"{" " if os.getenv("NERD_FONT") else ""}describing figures", f"describing figure {index+1}/{total}"]
                 if fig[0] is None:
                     fig_description = describe(fig[2], fig[3], args.vision_model, live, page_number, title, tasks)
                     cursor.execute("UPDATE pdf_figures SET description = ? WHERE id = ?",
@@ -116,24 +114,25 @@ def summarize_pages(row, gists, description : str | None, args : Namespace, curs
         if (len(gists) > 5):
             gists.pop(0)
         cursor.execute("UPDATE pdf_pages SET gist = ? WHERE id = ?", [gist, page_id])
-        live.update(set_view(page_number, title, 
-             ["extracting page", "adding page summaries", f"inserting gist: {gist}"]))
+        live.update(task_view(title, 
+             [f"extracting page {page_number}", "adding page summaries", f"inserting gist: {gist}"]))
 
 def insert_tables(page_number : int, title : str, args : Namespace , live : Live, rich_tables, cursor : Cursor, page_id : int, pdf_id : int):
     if args.tables:
-        live.update(set_view(page_number, title, 
-             ["extracting page", "inserting tables"]))
+        live.update(task_view(title, 
+             [f"extracting page {page_number}", "inserting tables"]))
         total = len(rich_tables)
         for index, table in enumerate(rich_tables):
             if table.page.page_number + 1 == page_number:
-                tasks = ["extracting page", "inserting tables", f"inserting table: {index+1}/{total}"]
+                tasks = [f"extracting page {page_number}", "inserting tables", f"inserting table: {index+1}/{total}"]
                 buffered = io.BytesIO()
                 table.image().save(buffered, format="JPEG")
                 image_b64 = base64.b64encode(buffered.getvalue())
                 try:
-                    live.update(set_view(page_number, title, tasks))
+                    live.update(task_view(title, tasks))
                     text = table.df().to_markdown()
                     if args.vision_model:
+                        tasks = [f"extracting page {page_number}", "inserting tables", f"inserting table: {index+1}/{total}", f"{" " if os.getenv("NERD_FONT") else ""}describing table"]
                         table_description = describe(buffered.getvalue(), "image/jpg", args.vision_model, live, page_number, title, tasks)
                     else:
                         table_description = None
@@ -145,7 +144,7 @@ def insert_tables(page_number : int, title : str, args : Namespace , live : Live
                             "INSERT INTO page_to_table (page_id, table_id) VALUES (?,?)",
                             [page_id, table_id])
                 except Exception as e:
-                        live.console.print(f"[red]extract table on p{page_number} failed: {e}")
+                    live.console.print(f"[red]extract table on p{page_number} failed: {e}")
 
 def insert_page(page : PageObject,
                 rich_tables : list[FormattedTable] | None,
@@ -158,7 +157,7 @@ def insert_page(page : PageObject,
                 description : str | None):
 
     page_number = (page.page_number or 0) + 1 #pages are zero indexed. We do this to match the probable ToC one-indexing of pages.
-    live.update(set_view(page_number, title, ["extracting page"]))
+    live.update(task_view(title, [f"extracting page {page_number}"]))
 
     cursor.execute("SELECT id, gist FROM pdf_pages WHERE pdf_id = ? AND page_number = ?", [pdf_id, page_number])
     row = cursor.fetchone()
@@ -170,7 +169,7 @@ def insert_page(page : PageObject,
 
     if row is None:
         fresh_page = True
-        live.update(set_view(page_number, title, ["extracting page", "extracting text"]))
+        live.update(task_view(title, [f"extracting page {page_number}", "extracting text"]))
         cursor.execute(
                 "INSERT INTO pdf_pages (page_number, data, text, pdf_id) VALUES (?,?,?,?)",
                 [page_number, pdf_bytes, page.extract_text(), pdf_id])
@@ -218,7 +217,7 @@ def insert_pdf(args : Namespace, the_pdf : str , live : Live, cursor : Cursor, d
 
     db.commit()
 
-    live.update(Markdown("Processing rich tables"))
+    live.update(task_view(title, [f"{" " if os.getenv("NERD_FONT") else ""}Processing rich tables"]))
 
     rich_tables = get_rich_tables(the_pdf) if args.tables else None
 
@@ -230,7 +229,14 @@ def validate_pdf(the_pdf : str):
     with open(the_pdf, "rb") as pdf:
         header = pdf.read(4)
         if header != b'%PDF':
-            sys.exit("Aborting. The input file isn't a valid PDF!")
+            sys.exit(f"Aborting. The file {the_pdf} isn't a valid PDF!")
+
+def validate_database(the_db : str):
+    with open(the_db, "rb") as database:
+        #validate input
+        header = database.read(6)
+        if header != b'SQLite':
+            sys.exit(f"Aborting. The file {the_db} isn't a valid SQLite database!")
 
 def main():
     parser = argparse.ArgumentParser(
@@ -271,15 +277,9 @@ def main():
 
     #validate database
     if os.path.exists(args.database):
-        with open(args.database, "rb") as database:
-            #validate input
-            header = database.read(6)
-            if header != b'SQLite':
-                sys.exit("Aborting. The input file isn't a valid SQLite database!")
+        validate_database(args.database)
 
-    view = Tree("")
-
-    with Live(view, refresh_per_second=4) as live:
+    with Live(fresh_view(), refresh_per_second=4) as live:
         update_db(args, live)
 
 def update_db(args : Namespace, live : Live):
@@ -294,7 +294,7 @@ def update_db(args : Namespace, live : Live):
 
     if len(rows) < 1:
         # if not, create it.
-        live.console.print("[blue]Initializing new database")
+        live.console.print(f"[blue]{"󰪩 " if os.getenv("NERD_FONT") else ""}Initializing new database")
         init_db(cursor)
 
     for pdf in args.pdfs:
