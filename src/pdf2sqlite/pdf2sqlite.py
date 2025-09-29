@@ -63,23 +63,27 @@ def extract_figures(cursor: Cursor, live : Live, page_number : int, title : str,
     if fresh_page:
         live.update(task_view(title, [f"extracting page {page_number}", "extracting figures"]))
         total = len(page.images)
-        for index, fig in enumerate(page.images):
-            # we skip small image smaller than a certain bound, which are often
-            # icons, watermarks, etc.
-            if min(fig.image.height, fig.image.width) < args.lower_pixel_bound:
-                continue
-            mime_type = Image.MIME.get(fig.image.format.upper())
-            try:
-                live.update(task_view(title, 
-                    ["extracting page", "extracting figures", f"extracting figure {index+1}/{total}"]))
-                cursor.execute("INSERT INTO pdf_figures (data, description, mime_type) VALUES (?,?,?)", 
-                               [fig.data, None, mime_type])
-                figure_id = cursor.lastrowid
-                cursor.execute("INSERT INTO page_to_figure (page_id, figure_id) VALUES (?,?)",
-                               [page_id, figure_id])
+        try:
+            for index, fig in enumerate(page.images):
+                # we skip small image smaller than a certain bound, which are often
+                # icons, watermarks, etc.
+                if min(fig.image.height, fig.image.width) < args.lower_pixel_bound:
+                    continue
+                mime_type = Image.MIME.get(fig.image.format.upper())
+                try:
+                    live.update(task_view(title, 
+                        ["extracting page", "extracting figures", f"extracting figure {index+1}/{total}, {mime_type}"]))
+                    cursor.execute("INSERT INTO pdf_figures (data, description, mime_type) VALUES (?,?,?)", 
+                                   [fig.data, None, mime_type])
+                    figure_id = cursor.lastrowid
+                    cursor.execute("INSERT INTO page_to_figure (page_id, figure_id) VALUES (?,?)",
+                                   [page_id, figure_id])
 
-            except Exception as e:
-                live.console.print(f"[red]extract {mime_type} on p{page_number} failed: {e}")
+                except Exception as e:
+                    live.console.print(f"[red]extract {mime_type} on p{page_number} failed: {e}")
+        except Exception as e:
+            live.console.print(f"[red] extracting images for p{page_number} failed: {e}")
+
 
     if args.vision_model:
         cursor.execute('''
