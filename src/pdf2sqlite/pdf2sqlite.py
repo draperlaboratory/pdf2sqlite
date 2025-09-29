@@ -62,10 +62,12 @@ def insert_sections(sections, pdf_id : int, cursor : Cursor):
 def extract_figures(cursor: Cursor, live : Live, page_number : int, title : str, page, page_id: int, args : Namespace, fresh_page : bool):
 
     if fresh_page:
-        live.update(task_view(title, [f"extracting page {page_number}", "extracting figures"]))
         try:
             total = len(page.images)
+            live.console.print(total)
             for index, fig in enumerate(page.images):
+                live.update(task_view(title, 
+                    ["extracting page", "extracting figures", f"extracting figure {index+1}/{total}"]))
                 # we skip small image smaller than a certain bound, which are often
                 # icons, watermarks, etc.
                 if min(fig.image.height, fig.image.width) < args.lower_pixel_bound:
