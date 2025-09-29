@@ -63,8 +63,8 @@ def extract_figures(cursor: Cursor, live : Live, page_number : int, title : str,
 
     if fresh_page:
         live.update(task_view(title, [f"extracting page {page_number}", "extracting figures"]))
-        total = len(page.images)
         try:
+            total = len(page.images)
             for index, fig in enumerate(page.images):
                 # we skip small image smaller than a certain bound, which are often
                 # icons, watermarks, etc.
