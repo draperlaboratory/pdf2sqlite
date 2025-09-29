@@ -6,6 +6,7 @@ import sqlite3
 from sqlite3 import Connection, Cursor
 from PIL import Image
 from pypdf import PdfReader, PdfWriter, PageObject
+import pypdf.filters
 from rich.live import Live
 import argparse
 from gmft.formatters.base import FormattedTable
@@ -271,10 +272,15 @@ def main():
                         help = "offline mode for gmft (blocks hugging face telemetry, solves VPN issues)")
     parser.add_argument("-l", "--lower_pixel_bound", type=positive_int, default=100,
                         help = "lower bound on pixel size for images")
+    parser.add_argument("-z", "--decompression_limit", type=positive_int,
+                        help = "upper bound on size for decompressed images. default 75,000,000. zero disables")
     args = parser.parse_args()
 
     if args.offline:
         os.environ['HF_HUB_OFFLINE'] = '1'
+
+    if args.decompression_limit:
+        pypdf.filters.ZLIB_MAX_OUTPUT_LENGTH = args.decompression_limit
 
     for pdf in args.pdfs:
         validate_pdf(pdf)
