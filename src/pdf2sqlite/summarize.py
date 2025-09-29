@@ -43,14 +43,15 @@ def summarize(gists, description, page_nu, title, page_bytes, model):
                 "role": "user",
                 "content": [                    
                     {
-                        "type": "image_url",
-                        "image_url":  f"data:application/pdf;base64,{base64_string}"
-                    },
-                    {
                         "type": "text",
                         "text" : "Please summarize this page."
                     },
-
+                    {
+                        "type": "file",
+                        "file":  {
+                            "file_data": f"data:application/pdf;base64,{base64_string}"
+                        },
+                    },
                 ],
             }])
 
