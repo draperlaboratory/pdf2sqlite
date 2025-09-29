@@ -58,7 +58,7 @@ def describe(image_bytes, mimetype, model, live, page_number, title, tasks):
     description = ""
     for chunk in response:
         description = description + (chunk.choices[0].delta.content or "")
-        live.update(task_view(page_number, title, tasks + [Panel(Markdown(description))]))
+        live.update(task_view(title, tasks + [Panel(Markdown(description))]))
 
     return description
 
