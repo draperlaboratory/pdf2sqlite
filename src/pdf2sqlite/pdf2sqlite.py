@@ -291,7 +291,10 @@ def main():
         validate_database(args.database)
 
     with Live(fresh_view(), refresh_per_second=4) as live:
-        update_db(args, live)
+        try:
+            update_db(args, live)
+        except KeyboardInterrupt:
+            live.console.print("Cancelled, shutting down")
 
 def update_db(args : Namespace, live : Live):
 
