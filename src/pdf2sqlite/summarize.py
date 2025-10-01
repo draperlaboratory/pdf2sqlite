@@ -1,6 +1,9 @@
 import base64
 import litellm
 import sys
+from .view import task_view
+from rich.markdown import Markdown
+from rich.panel import Panel
 
 def system_prompt(page_nu, title, description, gists):
 
@@ -24,7 +27,7 @@ def system_prompt(page_nu, title, description, gists):
 You are an AI document summarizer. You will be given a one page PDF. This PDF is page {page_nu} of a document titled {title}. You must accurately and concisely report the contents of this PDF using a single sentence. Your summary needs to be searchable, so include any important keywords that describe the content. {descstring} {giststring}
 """
 
-def summarize(gists, description, page_nu, title, page_bytes, model):
+def summarize(gists, description, page_nu, title, page_bytes, model, live, tasks):
     # previous gists could supply additional context, but let's try it
     # context-free to start
 
@@ -34,6 +37,7 @@ def summarize(gists, description, page_nu, title, page_bytes, model):
     base64_string = base64.b64encode(page_bytes).decode("utf-8")
 
     response = litellm.completion(
+            stream = True,
             model = model,
             messages = [ { 
                "role" : "system",
@@ -55,5 +59,9 @@ def summarize(gists, description, page_nu, title, page_bytes, model):
                 ],
             }])
 
-    return response.choices[0].message.content
+    description = ""
+    for chunk in response:
+        description = description + (chunk.choices[0].delta.content or "")
+        live.update(task_view(title, tasks + [Panel(Markdown(description))]))
 
+    return description

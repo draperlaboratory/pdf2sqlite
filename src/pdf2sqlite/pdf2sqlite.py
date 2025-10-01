@@ -109,19 +109,20 @@ def extract_figures(cursor: Cursor, live : Live, page_number : int, title : str,
                     live.console.print(f"[red]describe {fig[3]} on p{page_number} failed: {e}")
 
 def summarize_pages(row, gists, description : str | None, args : Namespace, cursor: Cursor, live : Live, page_number : int, title : str, pdf_bytes : bytes, page_id : int):
+    tasks = [f"extracting page {page_number}", "adding page summaries"]
     if (row is None or row[1] is None) and args.summarizer:
         gist = summarize(gists,
                          description,
                          page_number,
                          title,
                          pdf_bytes, 
-                         args.summarizer)
+                         args.summarizer,
+                         live,
+                         tasks)
         gists.append(gist)
         if (len(gists) > 5):
             gists.pop(0)
         cursor.execute("UPDATE pdf_pages SET gist = ? WHERE id = ?", [gist, page_id])
-        live.update(task_view(title, 
-             [f"extracting page {page_number}", "adding page summaries", f"inserting gist: {gist}"]))
 
 def insert_tables(page_number : int, title : str, args : Namespace , live : Live, rich_tables, cursor : Cursor, page_id : int, pdf_id : int):
     if args.tables:
