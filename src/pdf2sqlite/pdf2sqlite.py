@@ -64,7 +64,6 @@ def extract_figures(cursor: Cursor, live : Live, page_number : int, title : str,
     if fresh_page:
         try:
             total = len(page.images)
-            live.console.print(total)
             for index, fig in enumerate(page.images):
                 live.update(task_view(title, 
                     ["extracting page", "extracting figures", f"extracting figure {index+1}/{total}"]))
