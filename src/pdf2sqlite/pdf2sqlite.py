@@ -269,7 +269,7 @@ def main():
     parser.add_argument("-v", "--vision_model",
                         help = "a vision model to describe images (litellm naming conventions)")
     parser.add_argument("-t", "--tables", action = "store_true",
-                        help = "use gmft to analyze tables")
+                        help = "use gmft to analyze tables (will also use a vision model if available)")
     parser.add_argument("-o", "--offline", action = "store_true",
                         help = "offline mode for gmft (blocks hugging face telemetry, solves VPN issues)")
     parser.add_argument("-l", "--lower_pixel_bound", type=positive_int, default=100,
