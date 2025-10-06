@@ -56,10 +56,13 @@ options:
 
 ### Invocation
 
-Here's an example invocation:
+You can run the latest version easily with `uvx` or `uv tool` Here's an 
+example invocation (assuming you have bedrock credentials in your 
+environment):
 
 ```
-uv run uv run pdf2sqlite --offline -p ../data/*.pdf -d data.db -a "bedrock/amazon.nova-lite-v1:0" -s "bedrock/amazon.nova-lite-v1:0" -t
+uvx pdf2sqlite --offline -p ../data/*.pdf -d data.db -a 
+"bedrock/amazon.nova-lite-v1:0" -s "bedrock/amazon.nova-lite-v1:0" -t
 ```
 
 ### Integration with an LLM
