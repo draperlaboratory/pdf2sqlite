@@ -1,6 +1,6 @@
 [project]
 name = "pdf2sqlite"
-version = "0.0.0"
+version = "0.0.1"
 description = "Builds a searchable sqlite knowledge base out of pdf data"
 dependencies = [
     "boto3",
