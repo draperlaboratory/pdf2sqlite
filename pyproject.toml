@@ -2,6 +2,12 @@
 name = "pdf2sqlite"
 version = "0.0.1"
 description = "Builds a searchable sqlite knowledge base out of pdf data"
+readme = "README.md"
+licence = "MIT"
+licence-files = ["LICENSE"]
+maintainers = [
+    { name="Graham Leach-Krouse", email="gleach-krouse@draper.com" }
+]
 dependencies = [
     "boto3",
     "pypdf == 6.0.0",
@@ -13,6 +19,10 @@ dependencies = [
     "rich",
 ]
 requires-python = ">=3.12"
+
+[project.urls]
+Homepage = "https://github.com/draperlaboratory/pdf2sqlite"
+Issues = "https://github.com/draperlaboratory/pdf2sqlite/issues"
 
 [build-system]
 requires = ["hatchling"]
