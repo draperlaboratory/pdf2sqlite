@@ -15,26 +15,31 @@ and tabular data extracted using [gmft](https://github.com/conjuncts/gmft).
 
 ```
 usage: pdf2sqlite [-h] -p PDFS [PDFS ...] -d DATABASE [-s SUMMARIZER] [-a 
-ABSTRACTER] [-e EMBEDDER] [-v VISION_MODEL] [-t] [-o]
+ABSTRACTER] [-e EMBEDDER] [-v VISION_MODEL] [-t]
+                  [-o] [-l LOWER_PIXEL_BOUND] [-z DECOMPRESSION_LIMIT]
 
 covert pdfs into an easy-to-query sqlite DB
 
 options:
   -h, --help            show this help message and exit
-  -p PDFS [PDFS ...], --pdfs PDFS [PDFS ...]
+  -p, --pdfs PDFS [PDFS ...]
                         pdfs to add to DB
-  -d DATABASE, --database DATABASE
+  -d, --database DATABASE
                         database where PDF will be added
-  -s SUMMARIZER, --summarizer SUMMARIZER
+  -s, --summarizer SUMMARIZER
                         an LLM to sumarize pdf pages (litellm naming conventions)
-  -a ABSTRACTER, --abstracter ABSTRACTER
+  -a, --abstracter ABSTRACTER
                         an LLM to produce an abstract (litellm naming conventions)
-  -e EMBEDDER, --embedder EMBEDDER
+  -e, --embedder EMBEDDER
                         an embedding model to generate vector embeddings (litellm naming conventions)
-  -v VISION_MODEL, --vision_model VISION_MODEL
+  -v, --vision_model VISION_MODEL
                         a vision model to describe images (litellm naming conventions)
-  -t, --tables          use gmft to analyze tables
+  -t, --tables          use gmft to analyze tables (will also use a vision model if available)
   -o, --offline         offline mode for gmft (blocks hugging face telemetry, solves VPN issues)
+  -l, --lower_pixel_bound LOWER_PIXEL_BOUND
+                        lower bound on pixel size for images
+  -z, --decompression_limit DECOMPRESSION_LIMIT
+                        upper bound on size for decompressed images. default 75,000,000. zero disables
 ```
 
 ## Usage
