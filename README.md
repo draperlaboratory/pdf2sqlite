@@ -23,6 +23,8 @@ a variety of labeling mechanisms.
    semantic search. These are stored in the database using 
    [sqlite-vec](https://github.com/asg017/sqlite-vec).
 
+## Usage
+
 ```
 usage: pdf2sqlite [-h] -p PDFS [PDFS ...] -d DATABASE [-s SUMMARIZER] [-a 
 ABSTRACTER] [-e EMBEDDER] [-v VISION_MODEL] [-t]
@@ -51,8 +53,6 @@ options:
   -z, --decompression_limit DECOMPRESSION_LIMIT
                         upper bound on size for decompressed images. default 75,000,000. zero disables
 ```
-
-## Usage
 
 ### Invocation
 
