@@ -30,7 +30,7 @@ usage: pdf2sqlite [-h] -p PDFS [PDFS ...] -d DATABASE [-s SUMMARIZER] [-a
 ABSTRACTER] [-e EMBEDDER] [-v VISION_MODEL] [-t]
                   [-o] [-l LOWER_PIXEL_BOUND] [-z DECOMPRESSION_LIMIT]
 
-covert pdfs into an easy-to-query sqlite DB
+convert pdfs into an easy-to-query sqlite DB
 
 options:
   -h, --help            show this help message and exit

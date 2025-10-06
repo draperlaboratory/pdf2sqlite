@@ -248,7 +248,7 @@ def validate_database(the_db : str):
 def main():
     parser = argparse.ArgumentParser(
             prog = "pdf2sqlite",
-            description = "covert pdfs into an easy-to-query sqlite DB")
+            description = "convert pdfs into an easy-to-query sqlite DB")
 
     def positive_int(value):
         ival = int(value)
