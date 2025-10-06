@@ -10,10 +10,18 @@ documents. If you have a large set of documents, you may not be able to fit
 them all into the model's context window, or you may find that doing so
 degrades performance.
 
-In order to make information in the PDFs more discoverable, pdf2sqlite lets you
-extract a "gist" of each page (using any model supported by litellm) and an
-"abstract" for the PDF. Figures and tabular data are identified within the PDF,
-and tabular data extracted using [gmft](https://github.com/conjuncts/gmft).
+In order to make information in the PDFs more discoverable, pdf2sqlite provides 
+a variety of labeling mechanisms.
+
+1. You can extract a short searchable "gist" of each page (using any text 
+   completion model supported by [litellm](https://github.com/BerriAI/litellm)) 
+   and an "abstract" for the PDF.
+2. Figures and tabular data are identified within the PDF, and tabular data is 
+   extracted using [gmft](https://github.com/conjuncts/gmft).
+3. Figures and tables can be described by a vision model.
+4. PDF Sections can be labeled with doc2vec style embedding vectors for more 
+   semantic search. These are stored in the database using 
+   [sqlite-vec](https://github.com/asg017/sqlite-vec).
 
 ```
 usage: pdf2sqlite [-h] -p PDFS [PDFS ...] -d DATABASE [-s SUMMARIZER] [-a 
@@ -58,8 +66,8 @@ uv run uv run pdf2sqlite --offline -p ../data/*.pdf -d data.db -a "bedrock/amazo
 
 Some design guidelines:
 
-1. Pass the database schema to the LLM. It will contain some comments that
-   describe the different columns.
+1. Pass the database schema to the LLM. The schema will contain some comments 
+   that describe the different columns.
 
 2. To get the most of the database, you will probably want to write a tool that
    your LLM can call to convert binary pdf and image data stored in the
