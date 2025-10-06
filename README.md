@@ -1,3 +1,5 @@
+https://github.com/user-attachments/assets/f803902d-509e-44ca-a293-f5ff021b7e6d
+
 # pdf2sqlite
 
 pdf2sqlite lets you convert an arbitrarily large set of PDFs into a single
