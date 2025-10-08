@@ -9,6 +9,7 @@ from pypdf import PdfReader, PdfWriter, PageObject
 import pypdf.filters
 from rich.live import Live
 import argparse
+from rich_argparse import RichHelpFormatter
 from gmft.formatters.base import FormattedTable
 from argparse import Namespace
 from .summarize import summarize
@@ -248,7 +249,8 @@ def validate_database(the_db : str):
 def main():
     parser = argparse.ArgumentParser(
             prog = "pdf2sqlite",
-            description = "convert pdfs into an easy-to-query sqlite DB")
+            description = "Convert PDFs into an easy-to-query SQLite DB",
+            formatter_class=RichHelpFormatter)
 
     def positive_int(value):
         ival = int(value)
@@ -257,25 +259,25 @@ def main():
         return ival
 
     parser.add_argument("-p", "--pdfs",
-                        help = "pdfs to add to DB", nargs="+", required= True)
+                        help = "PDFs to add to DB", nargs="+", required= True)
     parser.add_argument("-d", "--database",
-                        help = "database where PDF will be added", required= True)
+                        help = "Database where PDF will be added", required= True)
     parser.add_argument("-s", "--summarizer",
-                        help = "an LLM to sumarize pdf pages (litellm naming conventions)")
+                        help = "An LLM to sumarize PDF pages (litellm naming conventions)")
     parser.add_argument("-a", "--abstracter",
-                        help = "an LLM to produce an abstract (litellm naming conventions)")
+                        help = "An LLM to produce an abstract (litellm naming conventions)")
     parser.add_argument("-e", "--embedder",
-                        help = "an embedding model to generate vector embeddings (litellm naming conventions)")
+                        help = "An embedding model to generate vector embeddings (litellm naming conventions)")
     parser.add_argument("-v", "--vision_model",
-                        help = "a vision model to describe images (litellm naming conventions)")
+                        help = "A vision model to describe images (litellm naming conventions)")
     parser.add_argument("-t", "--tables", action = "store_true",
-                        help = "use gmft to analyze tables (will also use a vision model if available)")
+                        help = "Use gmft to analyze tables (will also use a vision model if available)")
     parser.add_argument("-o", "--offline", action = "store_true",
-                        help = "offline mode for gmft (blocks hugging face telemetry, solves VPN issues)")
+                        help = "Offline mode for gmft (blocks hugging face telemetry, solves VPN issues)")
     parser.add_argument("-l", "--lower_pixel_bound", type=positive_int, default=100,
-                        help = "lower bound on pixel size for images")
+                        help = "Lower bound on pixel size for images")
     parser.add_argument("-z", "--decompression_limit", type=positive_int,
-                        help = "upper bound on size for decompressed images. default 75,000,000. zero disables")
+                        help = "Upper bound on size for decompressed images. default 75,000,000. zero disables")
     args = parser.parse_args()
 
     if args.offline:
