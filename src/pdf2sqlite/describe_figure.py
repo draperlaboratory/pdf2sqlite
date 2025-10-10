@@ -1,6 +1,5 @@
 import base64
 import litellm
-import sys
 from .view import task_view
 from rich.markdown import Markdown
 from rich.panel import Panel
@@ -27,9 +26,6 @@ Be factual and specific. Do not ask follow up questions, only generate the descr
 def describe(image_bytes, mimetype, model, live, title, tasks):
     # previous gists could supply additional context, but let's try it
     # context-free to start
-
-    if not litellm.utils.supports_vision(model=model):
-        sys.exit(f"Aborting. The model supplied, `{model}` doesn't support image inputs!")
 
     base64_string = base64.b64encode(image_bytes).decode("utf-8")
 

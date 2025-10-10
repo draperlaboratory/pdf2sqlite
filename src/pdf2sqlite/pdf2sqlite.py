@@ -1,7 +1,6 @@
 import os
 import io
-import base64
-import sys
+from .validation import validate_args
 import sqlite3
 from sqlite3 import Connection, Cursor
 from PIL import Image
@@ -21,7 +20,7 @@ from .embeddings import process_pdf_for_semantic_search
 from .describe_figure import describe
 from .view import task_view, fresh_view
 
-def generate_description(title : str, args : Namespace, reader : PdfReader):
+def generate_description(title : str, args : Namespace, reader : PdfReader, live: Live):
     new_pdf = PdfWriter(None)
     pages = reader.pages[:10]
     for i, page in enumerate(pages):
@@ -29,8 +28,9 @@ def generate_description(title : str, args : Namespace, reader : PdfReader):
     pdf_bytes = io.BytesIO()
     new_pdf.write(pdf_bytes)
     pdf_bytes = pdf_bytes.getvalue()
-    description = abstract(title, pdf_bytes, args.abstracter)
-    print(f"generated description of PDF: \"{description}\"")
+    tasks = ["Generating PDF Description"]
+    live.update(task_view(title, tasks))
+    description = abstract(title, pdf_bytes, args.abstracter, live, tasks)
     return description
 
 def insert_pdf_by_name(title : str, description : str | None, cursor : Cursor):
@@ -204,13 +204,13 @@ def insert_pdf(args : Namespace, the_pdf : str , live : Live, cursor : Cursor, d
 
     gists = [] # these are the page by page gists. We keep them around so that they can provide context for later gists
 
-    description = generate_description(title, args, reader) if args.abstracter else None
+    description = generate_description(title, args, reader, live) if args.abstracter else None
 
     pdf_id = insert_pdf_by_name(title, description, cursor)
 
     db.commit()
 
-    toc_and_sections = extract_toc_and_sections(reader)
+    toc_and_sections = extract_toc_and_sections(reader, live)
 
     if toc_and_sections['sections']:
         insert_sections(toc_and_sections['sections'], pdf_id, cursor)
@@ -232,18 +232,6 @@ def insert_pdf(args : Namespace, the_pdf : str , live : Live, cursor : Cursor, d
         insert_page(page, rich_tables, live, pdf_id, cursor, args, gists, title, description)
         db.commit()
 
-def validate_pdf(the_pdf : str):
-    with open(the_pdf, "rb") as pdf:
-        header = pdf.read(4)
-        if header != b'%PDF':
-            sys.exit(f"Aborting. The file {the_pdf} isn't a valid PDF!")
-
-def validate_database(the_db : str):
-    with open(the_db, "rb") as database:
-        #validate input
-        header = database.read(6)
-        if header != b'SQLite':
-            sys.exit(f"Aborting. The file {the_db} isn't a valid SQLite database!")
 
 def main():
     parser = argparse.ArgumentParser(
@@ -286,12 +274,7 @@ def main():
         # zero disables
         pypdf.filters.ZLIB_MAX_OUTPUT_LENGTH = args.decompression_limit
 
-    for pdf in args.pdfs:
-        validate_pdf(pdf)
-
-    #validate database
-    if os.path.exists(args.database):
-        validate_database(args.database)
+    validate_args(args)
 
     with Live(fresh_view(), refresh_per_second=4) as live:
         try:
