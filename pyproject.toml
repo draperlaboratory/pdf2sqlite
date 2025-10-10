@@ -3,8 +3,8 @@ name = "pdf2sqlite"
 version = "0.0.1"
 description = "Builds a searchable sqlite knowledge base out of pdf data"
 readme = "README.md"
-licence = "MIT"
-licence-files = ["LICENSE"]
+license = "MIT"
+license-files = ["LICENSE"]
 maintainers = [
     { name="Graham Leach-Krouse", email="gleach-krouse@draper.com" }
 ]
