@@ -1,8 +1,9 @@
 from pypdf import PdfReader
 from pypdf.generic._data_structures import Destination
+from rich.live import Live
 from typing import Dict
 
-def extract_toc_and_sections(reader: PdfReader) -> Dict:
+def extract_toc_and_sections(reader: PdfReader, live: Live) -> Dict:
     """
     Extract table of contents and corresponding sections from a single PDF.
     If TOC is not available, fall back to heuristic section detection.
@@ -80,7 +81,7 @@ def extract_toc_and_sections(reader: PdfReader) -> Dict:
                                 if page_text:
                                     section_text += page_text + "\n\n"
                             except Exception as e:
-                                print(f"Error extracting text from page {p}: {e}")
+                                live.console.print(f"Error extracting text from page {p}: {e}")
 
                         # Store the section
                         section_id = f"{level}_{title.replace(' ', '_')[:30]}_{page_number}"
@@ -94,7 +95,7 @@ def extract_toc_and_sections(reader: PdfReader) -> Dict:
 
         # If no TOC was found or no valid sections were extracted, use page-based sections
         if not result['has_toc'] or not result['sections']:
-            print("No TOC found or no valid sections extracted. Using page-based sections.")
+            live.console.print("No TOC found or no valid sections extracted. Using page-based sections.")
             result['has_toc'] = False
 
             for page_num, page in enumerate(reader.pages):
@@ -110,6 +111,6 @@ def extract_toc_and_sections(reader: PdfReader) -> Dict:
                     }
 
     except Exception as e:
-        print(f"Error extracting TOC: {e}")
+        live.console.print(f"Error extracting TOC: {e}")
 
     return result
