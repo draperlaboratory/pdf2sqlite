@@ -99,6 +99,7 @@ CREATE TABLE IF NOT EXISTS section_topics(
     topic_id INTEGER NOT NULL,
     confidence REAL,
     FOREIGN KEY (section_id) REFERENCES pdf_sections(id) ON DELETE CASCADE
+    FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE
 );
 
 -- Table for topics/clusters
