@@ -252,10 +252,10 @@ def main():
             description = "Convert PDFs into an easy-to-query SQLite DB",
             formatter_class=RichHelpFormatter)
 
-    def positive_int(value):
+    def nonnegative_int(value):
         ival = int(value)
-        if ival <= 0:
-            raise argparse.ArgumentTypeError(f"lower_pixel_bound must be a positive integer, got '{value}'")
+        if ival < 0:
+            raise argparse.ArgumentTypeError(f"the supplied bound must be a non-negative integer, got '{value}'")
         return ival
 
     parser.add_argument("-p", "--pdfs",
@@ -274,9 +274,9 @@ def main():
                         help = "Use gmft to analyze tables (will also use a vision model if available)")
     parser.add_argument("-o", "--offline", action = "store_true",
                         help = "Offline mode for gmft (blocks hugging face telemetry, solves VPN issues)")
-    parser.add_argument("-l", "--lower_pixel_bound", type=positive_int, default=100,
+    parser.add_argument("-l", "--lower_pixel_bound", type=nonnegative_int, default=100,
                         help = "Lower bound on pixel size for images")
-    parser.add_argument("-z", "--decompression_limit", type=positive_int,
+    parser.add_argument("-z", "--decompression_limit", type=nonnegative_int,
                         help = "Upper bound on size for decompressed images. default 75,000,000. zero disables")
     args = parser.parse_args()
 
@@ -284,6 +284,7 @@ def main():
         os.environ['HF_HUB_OFFLINE'] = '1'
 
     if args.decompression_limit:
+        # zero disables
         pypdf.filters.ZLIB_MAX_OUTPUT_LENGTH = args.decompression_limit
 
     for pdf in args.pdfs:
