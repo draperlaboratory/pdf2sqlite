@@ -24,7 +24,7 @@ Be factual and specific. Do not ask follow up questions, only generate the descr
 
 """
 
-def describe(image_bytes, mimetype, model, live, page_number, title, tasks):
+def describe(image_bytes, mimetype, model, live, title, tasks):
     # previous gists could supply additional context, but let's try it
     # context-free to start
 

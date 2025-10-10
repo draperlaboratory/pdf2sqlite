@@ -103,7 +103,7 @@ def extract_figures(cursor: Cursor, live : Live, page_number : int, title : str,
             try:
                 tasks = [f"extracting page {page_number}", f"{" " if os.getenv("NERD_FONT") else ""}describing figures", f"describing figure {index+1}/{total}"]
                 if fig[0] is None:
-                    fig_description = describe(fig[2], fig[3], args.vision_model, live, page_number, title, tasks)
+                    fig_description = describe(fig[2], fig[3], args.vision_model, live, title, tasks)
                     cursor.execute("UPDATE pdf_figures SET description = ? WHERE id = ?",
                                    [fig_description, fig[1]])
             except Exception as e:
@@ -141,7 +141,7 @@ def insert_tables(page_number : int, title : str, args : Namespace , live : Live
                     text = table.df().to_markdown()
                     if args.vision_model:
                         tasks = [f"extracting page {page_number}", "inserting tables", f"inserting table: {index+1}/{total}", f"{" " if os.getenv("NERD_FONT") else ""}describing table"]
-                        table_description = describe(buffered.getvalue(), "image/jpg", args.vision_model, live, page_number, title, tasks)
+                        table_description = describe(buffered.getvalue(), "image/jpg", args.vision_model, live, title, tasks)
                     else:
                         table_description = None
                     cursor.execute(
