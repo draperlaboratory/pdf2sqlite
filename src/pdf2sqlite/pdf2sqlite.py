@@ -135,7 +135,6 @@ def insert_tables(page_number : int, title : str, args : Namespace , live : Live
                 tasks = [f"extracting page {page_number}", "inserting tables", f"inserting table: {index+1}/{total}"]
                 buffered = io.BytesIO()
                 table.image().save(buffered, format="JPEG")
-                image_b64 = base64.b64encode(buffered.getvalue())
                 try:
                     live.update(task_view(title, tasks))
                     text = table.df().to_markdown()
@@ -146,7 +145,7 @@ def insert_tables(page_number : int, title : str, args : Namespace , live : Live
                         table_description = None
                     cursor.execute(
                             "INSERT INTO pdf_tables (text, image, description, caption_above, caption_below, pdf_id, page_number, xmin, ymin) VALUES (?,?,?,?,?,?,?,?,?)",
-                            [text, image_b64, table_description, table.captions()[0], table.captions()[1], pdf_id, page_number, table.bbox[0], table.bbox[1]])
+                            [text, buffered.getvalue(), table_description, table.captions()[0], table.captions()[1], pdf_id, page_number, table.bbox[0], table.bbox[1]])
                     table_id = cursor.lastrowid
                     cursor.execute(
                             "INSERT INTO page_to_table (page_id, table_id) VALUES (?,?)",
