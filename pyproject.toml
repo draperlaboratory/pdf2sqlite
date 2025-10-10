@@ -1,6 +1,6 @@
 [project]
 name = "pdf2sqlite"
-version = "0.0.1"
+version = "0.0.2"
 description = "Builds a searchable sqlite knowledge base out of pdf data"
 readme = "README.md"
 license = "MIT"
