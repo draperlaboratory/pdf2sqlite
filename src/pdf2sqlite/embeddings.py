@@ -1,11 +1,10 @@
-import os
+import sys
 import re
 import litellm
 import numpy as np
 from collections import Counter
 from sklearn.cluster import KMeans
 from typing import List, Dict, Tuple
-from pypdf import PdfReader, PdfWriter
 
 def process_pdf_for_semantic_search(
         toc_and_sections,
@@ -197,7 +196,7 @@ def get_embeddings(texts: List[str], model_name: str = "mistral/mistral-embed") 
 
         except Exception as e:
             print(f"Error getting embeddings for batch {i // batch_size + 1}: {e}")
-            os.exit(1)
+            sys.exit(1)
 
     print(f"Generated {len(embeddings)} embeddings")
     return embeddings
