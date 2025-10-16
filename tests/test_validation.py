@@ -79,3 +79,41 @@ def test_validate_llms_rejects_unsupported_vision_model(monkeypatch):
         validation.validate_llms(args)
 
     assert "doesn't support image inputs" in str(excinfo.value)
+
+
+def test_validate_llms_rejects_unsupported_summarizer(monkeypatch):
+    args = Namespace(
+        vision_model=None,
+        summarizer="summarizer-model",
+        abstracter=None,
+    )
+
+    monkeypatch.setattr(
+        validation.litellm.utils,
+        "supports_pdf_input",
+        lambda _: False,
+    )
+
+    with pytest.raises(SystemExit) as excinfo:
+        validation.validate_llms(args)
+
+    assert "summarization model supplied" in str(excinfo.value)
+
+
+def test_validate_llms_rejects_unsupported_abstracter(monkeypatch):
+    args = Namespace(
+        vision_model=None,
+        summarizer=None,
+        abstracter="abstracter-model",
+    )
+
+    monkeypatch.setattr(
+        validation.litellm.utils,
+        "supports_pdf_input",
+        lambda _: False,
+    )
+
+    with pytest.raises(SystemExit) as excinfo:
+        validation.validate_llms(args)
+
+    assert "abstracter model supplied" in str(excinfo.value)
