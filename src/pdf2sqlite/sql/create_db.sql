@@ -7,8 +7,8 @@ CREATE TABLE pdfs(
 CREATE TABLE pdf_to_page(
     pdf_id INTEGER NOT NULL,
     page_id INTEGER NOT NULL,
-    FOREIGN KEY (pdf_id) REFERENCES pdf_pages(id) ON DELETE CASCADE,
-    FOREIGN KEY (page_id) REFERENCES pdf_tables(id) ON DELETE CASCADE,
+    FOREIGN KEY (pdf_id) REFERENCES pdfs(id) ON DELETE CASCADE,
+    FOREIGN KEY (page_id) REFERENCES pdf_pages(id) ON DELETE CASCADE,
     PRIMARY KEY (pdf_id, page_id)
 );
 

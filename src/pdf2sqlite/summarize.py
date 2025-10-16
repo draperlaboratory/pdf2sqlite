@@ -1,4 +1,6 @@
 import base64
+from typing import Any, Iterable, cast
+
 import litellm
 from rich.markdown import Markdown
 from rich.panel import Panel

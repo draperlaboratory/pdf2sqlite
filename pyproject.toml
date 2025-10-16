@@ -21,6 +21,11 @@ dependencies = [
 ]
 requires-python = ">=3.12"
 
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
 [project.urls]
 Homepage = "https://github.com/draperlaboratory/pdf2sqlite"
 Issues = "https://github.com/draperlaboratory/pdf2sqlite/issues"
