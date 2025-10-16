@@ -1,8 +1,9 @@
 import base64
 import litellm
-from .view import task_view
 from rich.markdown import Markdown
 from rich.panel import Panel
+
+from .task_stack import TaskStack
 
 def system_prompt(page_nu, title, description, gists):
 
@@ -28,7 +29,13 @@ def system_prompt(page_nu, title, description, gists):
             "Your summary needs to be searchable, so include any important keywords that describe the content. "
             f"{descstring} {giststring}")
 
-def summarize(gists, description, page_nu, title, page_bytes, model, live, tasks):
+def summarize(gists,
+              description,
+              page_nu,
+              title,
+              page_bytes,
+              model,
+              tasks: TaskStack):
     # previous gists could supply additional context, but let's try it
     # context-free to start
 
@@ -60,6 +67,6 @@ def summarize(gists, description, page_nu, title, page_bytes, model, live, tasks
     description = ""
     for chunk in response:
         description = description + (chunk.choices[0].delta.content or "")
-        live.update(task_view(title, tasks + [Panel(Markdown(description))]))
+        tasks.render([Panel(Markdown(description))])
 
     return description

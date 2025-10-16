@@ -1,9 +1,9 @@
 import base64
 import litellm
-from .view import task_view
 from rich.markdown import Markdown
 from rich.panel import Panel
-import sys
+
+from .task_stack import TaskStack
 
 def systemPrompt(title):
     return (
@@ -13,7 +13,7 @@ def systemPrompt(title):
             "Give a concise one-paragraph description of the overall topic and contents of the document."
             )
 
-def abstract(title, pdf_bytes, model, live, tasks):
+def abstract(title, pdf_bytes, model, tasks: TaskStack):
 
     base64_string = base64.b64encode(pdf_bytes).decode("utf-8")
 
@@ -43,7 +43,7 @@ def abstract(title, pdf_bytes, model, live, tasks):
     description = ""
     for chunk in response:
         description = description + (chunk.choices[0].delta.content or "")
-        live.update(task_view(title, tasks + [Panel(Markdown(description))]))
+        tasks.render([Panel(Markdown(description))])
 
     return description
 
