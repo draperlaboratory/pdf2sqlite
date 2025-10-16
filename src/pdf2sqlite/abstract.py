@@ -3,6 +3,7 @@ import litellm
 from rich.markdown import Markdown
 from rich.panel import Panel
 
+from .streaming import accumulate_streaming_text
 from .task_stack import TaskStack
 
 def systemPrompt(title):
@@ -40,10 +41,8 @@ def abstract(title, pdf_bytes, model, tasks: TaskStack):
                 ],
             }])
 
-    description = ""
-    for chunk in response:
-        description = description + (chunk.choices[0].delta.content or "")
-        tasks.render([Panel(Markdown(description))])
+    def render(current: str) -> None:
+        tasks.render([Panel(Markdown(current))])
 
-    return description
+    return accumulate_streaming_text(response, render)
 

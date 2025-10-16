@@ -5,6 +5,7 @@ import litellm
 from rich.markdown import Markdown
 from rich.panel import Panel
 
+from .streaming import accumulate_streaming_text
 from .task_stack import TaskStack
 
 def system_prompt(page_nu, title, description, gists):
@@ -66,9 +67,7 @@ def summarize(gists,
                 ],
             }])
 
-    description = ""
-    for chunk in response:
-        description = description + (chunk.choices[0].delta.content or "")
-        tasks.render([Panel(Markdown(description))])
+    def render(current: str) -> None:
+        tasks.render([Panel(Markdown(current))])
 
-    return description
+    return accumulate_streaming_text(response, render)
