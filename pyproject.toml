@@ -18,6 +18,7 @@ dependencies = [
     "numpy",
     "rich",
     "rich-argparse>=1.7.1",
+    "mcp>=0.4.1",
 ]
 requires-python = ">=3.12"
 
@@ -36,3 +37,4 @@ build-backend = "hatchling.build"
 
 [project.scripts]
 pdf2sqlite = "pdf2sqlite.pdf2sqlite:main"
+pdf2sqlite-mcp = "pdf2sqlite.mcp_server.__main__:main"
