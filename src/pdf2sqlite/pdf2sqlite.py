@@ -263,7 +263,7 @@ def insert_tables(page_ctx: PageContext) -> None:
                         with context.tasks.step(describe_label):
                             table_description = describe(
                                 image_bytes,
-                                "image/jpg",
+                                "image/jpeg",
                                 args.vision_model,
                                 context.tasks,
                             )
