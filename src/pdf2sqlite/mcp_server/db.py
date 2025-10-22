@@ -192,10 +192,14 @@ class Database:
                 pdf_tables.id,
                 pdf_tables.pdf_id,
                 pdf_tables.page_number,
+                pdf_tables.text,
                 pdf_tables.description,
                 pdf_tables.caption_above,
                 pdf_tables.caption_below,
-                LENGTH(pdf_tables.image) AS data_bytes
+                pdf_tables.xmin,
+                pdf_tables.ymin,
+                LENGTH(pdf_tables.image) AS data_bytes,
+                LENGTH(pdf_tables.text) AS text_length
             FROM pdf_tables
             JOIN page_to_table ON page_to_table.table_id = pdf_tables.id
             WHERE page_to_table.page_id = ?
