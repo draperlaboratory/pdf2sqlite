@@ -1113,7 +1113,7 @@ dependencies = [
     { name = "sqlite-vec" },
 ]
 
-[package.optional-dependencies]
+[package.dev-dependencies]
 dev = [
     { name = "pytest" },
 ]
@@ -1126,13 +1126,14 @@ requires-dist = [
     { name = "mcp", specifier = ">=0.4.1" },
     { name = "numpy" },
     { name = "pypdf", specifier = "==6.0.0" },
-    { name = "pytest", marker = "extra == 'dev'" },
     { name = "rich" },
     { name = "rich-argparse", specifier = ">=1.7.1" },
     { name = "scikit-learn" },
     { name = "sqlite-vec" },
 ]
-provides-extras = ["dev"]
+
+[package.metadata.requires-dev]
+dev = [{ name = "pytest" }]
 
 [[package]]
 name = "pillow"
