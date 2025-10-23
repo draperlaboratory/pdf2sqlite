@@ -67,20 +67,60 @@ uvx pdf2sqlite --offline -p ../data/*.pdf -d data.db -a
 
 ### Integration with an LLM
 
-Some design guidelines:
+For many purposes, it should be enough to connect the LLM to a generic sqlite 
+tool, either an MCP server like 
+[this](https://github.com/modelcontextprotocol/servers-archived/tree/main/src/sqlite) 
+reference server, or by giving a coding agent like Claude Code access to a cli 
+tool like `sqlite3`. Ordinary sqlite queries will let the LLM access the full 
+text of each page, along with any textual transcriptions of tables or 
+descriptions of figures included in the database.
 
-1. Pass the database schema to the LLM. The schema will contain some comments 
-   that describe the different columns.
+However, it's also possible for a vision model to directly examine the original 
+pages, tables, or figures, since these are saved in the database. So, we ship a 
+simple MCP server, that includes tools and resources for retrieving these kinds 
+of data.
 
-2. To get the most of the database, you will probably want to write a tool that
-   your LLM can call to convert binary pdf and image data stored in the
-   database into images and PDF pages. A good design is to allow the LLM to
-   pass in a table name, row id and column name, and receive the relevant
-   content as a response. The LLM will generally be able to discern the
-   necessary inputs from the schema, so the tool will be robust against future
-   schema changes.
+An example configuration for Claude desktop might be:
 
-3. A backend (like, e.g. Amazon Bedrock) that supports returning PDFs as the
-   result of a tool call may be helpful, although it will probably work to
-   return the PDF as a separate content block alongside a tool call result that
-   just says "success, PDF will be delivered" or something similar.
+```json
+{
+  "mcpServers": {
+    "pdf2sqlite": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "pdf2sqlite",
+        "pdf2sqlite-mcp",
+        "--database",
+        "MyDatabase.db"
+      ]
+    }
+  }
+}
+```
+
+Full usage details are below.
+
+```
+usage: pdf2sqlite-mcp [-h] [-d DATABASE] [--max-blob-bytes MAX_BLOB_BYTES]
+                      [--default-limit DEFAULT_LIMIT] [--max-limit MAX_LIMIT]
+                      [--transport {sse,stdio,streamable-http}] [--host HOST]
+                      [--port PORT]
+
+Expose pdf2sqlite databases over the Model Context Protocol
+
+options:
+  -h, --help            show this help message and exit
+  -d, --database DATABASE
+                        Path to the sqlite database produced by pdf2sqlite
+  --max-blob-bytes MAX_BLOB_BYTES
+                        Maximum blob size the server will return (bytes)
+  --default-limit DEFAULT_LIMIT
+                        Default limit for listing queries
+  --max-limit MAX_LIMIT
+                        Maximum limit for listing queries
+  --transport {sse,stdio,streamable-http}
+                        Transport to use when running the server
+  --host HOST           Host name for SSE or HTTP transports
+  --port PORT           Port for SSE or HTTP transports
+```
